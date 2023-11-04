@@ -12,11 +12,13 @@
 WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
 
-//button and debouncing
-const int BUTTON_PIN = 32; // Digital pin for the button
-bool buttonState = false;   // Current button state
+// button and debouncing
+const int BUTTON_PIN = 27;    // Digital pin for the button
+const int BUZZER_PIN = 26;    // Digital pin for the buzzer
+const int LED_PIN = 25;       // Digital pin for the LED
+bool buttonState = false;     // Current button state
 bool lastButtonState = false; // Previous button state
-bool buttonPressed = false;  // Flag to indicate a button press
+bool buttonPressed = false;   // Flag to indicate a button press
 
 void messageHandler(char *topic, byte *payload, unsigned int length)
 {
@@ -71,9 +73,28 @@ void connectIOT()
   Serial.println("IoT Connected!");
 }
 
+void soundBuzzer()
+{
+  // Turn the buzzer on
+  digitalWrite(BUZZER_PIN, HIGH);
+  delay(200); // Sound for 200 milliseconds
+  // Turn the buzzer off
+  digitalWrite(BUZZER_PIN, LOW);
+}
+
+void flashLED()
+{
+  // Turn the LED on
+  digitalWrite(LED_PIN, HIGH);
+  delay(200); // Turn on for 200 milliseconds
+  // Turn the LED off
+  digitalWrite(LED_PIN, LOW);
+}
+
 void publishMessage()
 {
-  if (buttonPressed) {
+  if (buttonPressed)
+  {
     StaticJsonDocument<200> doc;
     doc["button-pressed"] = true;
     doc["machine_id"] = MACHINE_ID;
@@ -82,6 +103,11 @@ void publishMessage()
 
     client.publish(PUBLISH_DISPENSE_TOPIC, jsonBuffer);
     Serial.println("published");
+
+    // Sound the buzzer and flash the LED
+    soundBuzzer();
+    flashLED();
+
     buttonPressed = false; // Reset the buttonPressed state after publishing
   }
 }
@@ -91,14 +117,18 @@ void setup()
   Serial.begin(115200);
   connectIOT();
   pinMode(BUTTON_PIN, INPUT_PULLUP); // Set the button pin as input with a pull-up resistor
+  pinMode(BUZZER_PIN, OUTPUT);       // Set the buzzer pin as an output
+  pinMode(LED_PIN, OUTPUT);          // Set the LED pin as an output
 }
 
 void loop()
 {
   buttonState = digitalRead(BUTTON_PIN);
 
-  if (buttonState != lastButtonState) {
-    if (buttonState == LOW) {
+  if (buttonState != lastButtonState)
+  {
+    if (buttonState == LOW)
+    {
       // Button pressed
       buttonPressed = true;
     }
@@ -107,4 +137,5 @@ void loop()
 
   publishMessage();
   client.loop();
+  //add delay - tiempo que tarda la lata en caer
 }
