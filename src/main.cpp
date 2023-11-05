@@ -79,11 +79,11 @@ void connectIOT()
   Serial.println("IoT Connected!");
 }
 
-void soundBuzzer()
+void sound_buzzer(int delayTime)
 {
   // Turn the buzzer on
   digitalWrite(BUZZER_PIN, HIGH);
-  delay(200); // Sound for 200 milliseconds
+  delay(delayTime); // Sound for 200 milliseconds
   // Turn the buzzer off
   digitalWrite(BUZZER_PIN, LOW);
 }
@@ -111,7 +111,7 @@ void publishMessage()
     Serial.println("published-button-pressed");
 
     // Sound the buzzer and flash the LED
-    soundBuzzer();
+    sound_buzzer(200);
     flashLED();
 
     isButtonPressed = false; // Reset the isButtonPressed state after publishing
@@ -127,6 +127,8 @@ void publishMessage()
 
     client.publish(PUBLISH_DISPENSE_TOPIC, jsonBuffer);
     Serial.println("published-object-detected");
+    sound_buzzer(50);
+
     isObjectDetected = false;
     delay(5000);
   }
@@ -184,8 +186,7 @@ void loop()
   if (distance < 5)
   {
     isObjectDetected = true;
-    Serial.println("distance = ");
-    Serial.print(distance);
+    Serial.printf("distance = %f\n", distance);
   }
 
   publishMessage();
