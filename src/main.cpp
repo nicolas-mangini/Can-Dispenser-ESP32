@@ -18,7 +18,13 @@ const int BUZZER_PIN = 26;    // Digital pin for the buzzer
 const int LED_PIN = 25;       // Digital pin for the LED
 bool buttonState = false;     // Current button state
 bool lastButtonState = false; // Previous button state
-bool buttonPressed = false;   // Flag to indicate a button press
+bool isButtonPressed = false; // Flag to indicate a button press
+
+// HC-SR04
+const int ECHO_PIN = 33;
+const int TRIG_PIN = 32;
+const double sound_speed = 0.0343; // in cm/microsecs
+bool isObjectDetected = false;
 
 void messageHandler(char *topic, byte *payload, unsigned int length)
 {
@@ -93,7 +99,7 @@ void flashLED()
 
 void publishMessage()
 {
-  if (buttonPressed)
+  if (isButtonPressed)
   {
     StaticJsonDocument<200> doc;
     doc["button-pressed"] = true;
@@ -102,14 +108,40 @@ void publishMessage()
     serializeJson(doc, jsonBuffer); // print to client
 
     client.publish(PUBLISH_DISPENSE_TOPIC, jsonBuffer);
-    Serial.println("published");
+    Serial.println("published-button-pressed");
 
     // Sound the buzzer and flash the LED
     soundBuzzer();
     flashLED();
 
-    buttonPressed = false; // Reset the buttonPressed state after publishing
+    isButtonPressed = false; // Reset the isButtonPressed state after publishing
   }
+
+  if (isObjectDetected)
+  {
+    StaticJsonDocument<200> doc;
+    doc["object-detected"] = true;
+    doc["machine_id"] = MACHINE_ID;
+    char jsonBuffer[512];
+    serializeJson(doc, jsonBuffer); // print to client
+
+    client.publish(PUBLISH_DISPENSE_TOPIC, jsonBuffer);
+    Serial.println("published-object-detected");
+    isObjectDetected = false;
+    delay(5000);
+  }
+}
+
+void send_trigger(void)
+{
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+}
+
+long get_pulse(void)
+{
+  return pulseIn(ECHO_PIN, HIGH); // in microseconds
 }
 
 void setup()
@@ -119,10 +151,15 @@ void setup()
   pinMode(BUTTON_PIN, INPUT_PULLUP); // Set the button pin as input with a pull-up resistor
   pinMode(BUZZER_PIN, OUTPUT);       // Set the buzzer pin as an output
   pinMode(LED_PIN, OUTPUT);          // Set the LED pin as an output
+
+  pinMode(TRIG_PIN, OUTPUT);   // trigPin as output
+  digitalWrite(TRIG_PIN, LOW); // trigPin to low
+  pinMode(ECHO_PIN, INPUT);    // echoPin as input
 }
 
 void loop()
 {
+  // BUTTON-DETECT
   buttonState = digitalRead(BUTTON_PIN);
 
   if (buttonState != lastButtonState)
@@ -130,12 +167,28 @@ void loop()
     if (buttonState == LOW)
     {
       // Button pressed
-      buttonPressed = true;
+      isButtonPressed = true;
     }
     lastButtonState = buttonState;
   }
 
+  // HC-SR04
+  long duration;
+  double distance;
+
+  send_trigger();
+  duration = get_pulse();
+
+  distance = duration * sound_speed / 2;
+
+  if (distance < 5)
+  {
+    isObjectDetected = true;
+    Serial.println("distance = ");
+    Serial.print(distance);
+  }
+
   publishMessage();
+
   client.loop();
-  //add delay - tiempo que tarda la lata en caer
 }
