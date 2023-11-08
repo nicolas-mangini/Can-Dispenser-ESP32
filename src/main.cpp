@@ -13,18 +13,21 @@ WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
 
 // button and debouncing
-const int BUTTON_PIN = 27;    // Digital pin for the button
-const int BUZZER_PIN = 26;    // Digital pin for the buzzer
-const int LED_PIN = 25;       // Digital pin for the LED
+const int BUTTON_PIN = 14;    // Digital pin for the button
+const int BUZZER_PIN = 27;    // Digital pin for the buzzer
+const int LED_PIN = 26;       // Digital pin for the LED
+const int LED_NO_STOCK = 32;
 bool buttonState = false;     // Current button state
 bool lastButtonState = false; // Previous button state
 bool isButtonPressed = false; // Flag to indicate a button press
 
 // HC-SR04
-const int ECHO_PIN = 33;
-const int TRIG_PIN = 32;
+const int ECHO_PIN = 25;
+const int TRIG_PIN = 33;
 const double sound_speed = 0.0343; // in cm/microsecs
 bool isObjectDetected = false;
+
+int stock = 0;
 
 void messageHandler(char *topic, byte *payload, unsigned int length)
 {
@@ -153,6 +156,7 @@ void setup()
   pinMode(BUTTON_PIN, INPUT_PULLUP); // Set the button pin as input with a pull-up resistor
   pinMode(BUZZER_PIN, OUTPUT);       // Set the buzzer pin as an output
   pinMode(LED_PIN, OUTPUT);          // Set the LED pin as an output
+  pinMode(LED_NO_STOCK, OUTPUT);
 
   pinMode(TRIG_PIN, OUTPUT);   // trigPin as output
   digitalWrite(TRIG_PIN, LOW); // trigPin to low
@@ -169,7 +173,22 @@ void loop()
     if (buttonState == LOW)
     {
       // Button pressed
-      isButtonPressed = true;
+      if (stock > 0)
+      {
+        isButtonPressed = true;
+      }
+      else
+      {
+        // No stock left, beep twice
+        digitalWrite(LED_NO_STOCK, HIGH);
+        sound_buzzer(200);
+        delay(100);
+        sound_buzzer(200);
+        delay(100);
+        sound_buzzer(200);
+        digitalWrite(LED_NO_STOCK, LOW);
+        Serial.println("No stock available");
+      }
     }
     lastButtonState = buttonState;
   }
@@ -186,6 +205,7 @@ void loop()
   if (distance < 5)
   {
     isObjectDetected = true;
+    stock--;
     Serial.printf("distance = %f\n", distance);
   }
 
