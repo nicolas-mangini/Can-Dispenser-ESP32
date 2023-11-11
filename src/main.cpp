@@ -4,6 +4,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include "WiFi.h"
+#include <ESP32Servo.h>
 
 #define PUBLISH_DISPENSE_TOPIC "dispenser/maquina1/dispense_event"
 #define PUBLISH_DETECT_TOPIC "dispenser/maquina1/product_detected"
@@ -12,11 +13,12 @@
 WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
 
+const int BUZZER_PIN = 27; // Digital pin for the buzzer
+const int LED_PIN = 26;    // Digital pin for the LED
+const int LED_NO_STOCK = 32;
+
 // button and debouncing
 const int BUTTON_PIN = 14;    // Digital pin for the button
-const int BUZZER_PIN = 27;    // Digital pin for the buzzer
-const int LED_PIN = 26;       // Digital pin for the LED
-const int LED_NO_STOCK = 32;
 bool buttonState = false;     // Current button state
 bool lastButtonState = false; // Previous button state
 bool isButtonPressed = false; // Flag to indicate a button press
@@ -24,12 +26,16 @@ bool isButtonPressed = false; // Flag to indicate a button press
 // HC-SR04
 const int ECHO_PIN = 25;
 const int TRIG_PIN = 33;
-const double sound_speed = 0.0343; // in cm/microsecs
+const double SOUND_SPEED = 0.0343; // in cm/microsecs
 bool isObjectDetected = false;
 
-int stock = 0;
+// servo
+const int SERVO_PIN = 12;
+Servo myServo;
 
-void messageHandler(char *topic, byte *payload, unsigned int length)
+int stock = 20;
+
+void message_handler(char *topic, byte *payload, unsigned int length)
 {
   Serial.print("incoming: ");
   Serial.println(topic);
@@ -40,7 +46,7 @@ void messageHandler(char *topic, byte *payload, unsigned int length)
   Serial.println(message);
 }
 
-void connectIOT()
+void connect_IOT()
 {
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -60,9 +66,9 @@ void connectIOT()
   client.setServer(IOT_ENDPOINT, 8883);
 
   // Create a message handler
-  client.setCallback(messageHandler);
+  client.setCallback(message_handler);
 
-  Serial.println("Connecting to MQTT Server");
+  Serial.println("\nConnecting to MQTT Server");
 
   while (!client.connect("Pepe"))
   {
@@ -91,16 +97,24 @@ void sound_buzzer(int delayTime)
   digitalWrite(BUZZER_PIN, LOW);
 }
 
-void flashLED()
+void flash_led(int ledPin, int delayTime, int repeat, boolean withSound)
 {
-  // Turn the LED on
-  digitalWrite(LED_PIN, HIGH);
-  delay(200); // Turn on for 200 milliseconds
-  // Turn the LED off
-  digitalWrite(LED_PIN, LOW);
+  for (int i = 0; i < repeat; i++)
+  {
+    // Turn the LED on
+    digitalWrite(ledPin, HIGH);
+    if (withSound)
+    {
+      sound_buzzer(delayTime);
+    }
+    delay(delayTime); // Wait for 200 milliseconds
+    // Turn the LED off
+    digitalWrite(ledPin, LOW);
+    delay(delayTime); // Wait for 200 milliseconds
+  }
 }
 
-void publishMessage()
+void publish_message()
 {
   if (isButtonPressed)
   {
@@ -114,8 +128,13 @@ void publishMessage()
     Serial.println("published-button-pressed");
 
     // Sound the buzzer and flash the LED
-    sound_buzzer(200);
-    flashLED();
+    flash_led(LED_PIN, 100, 1, true);
+
+    myServo.attach(SERVO_PIN);
+    myServo.write(90);
+    delay(5000);
+    myServo.write(0);
+    myServo.detach();
 
     isButtonPressed = false; // Reset the isButtonPressed state after publishing
   }
@@ -130,7 +149,8 @@ void publishMessage()
 
     client.publish(PUBLISH_DISPENSE_TOPIC, jsonBuffer);
     Serial.println("published-object-detected");
-    sound_buzzer(50);
+
+    sound_buzzer(100);
 
     isObjectDetected = false;
     delay(5000);
@@ -152,7 +172,7 @@ long get_pulse(void)
 void setup()
 {
   Serial.begin(115200);
-  connectIOT();
+  connect_IOT();
   pinMode(BUTTON_PIN, INPUT_PULLUP); // Set the button pin as input with a pull-up resistor
   pinMode(BUZZER_PIN, OUTPUT);       // Set the buzzer pin as an output
   pinMode(LED_PIN, OUTPUT);          // Set the LED pin as an output
@@ -161,10 +181,13 @@ void setup()
   pinMode(TRIG_PIN, OUTPUT);   // trigPin as output
   digitalWrite(TRIG_PIN, LOW); // trigPin to low
   pinMode(ECHO_PIN, INPUT);    // echoPin as input
+  myServo.attach(SERVO_PIN);
 }
 
 void loop()
 {
+  publish_message();
+
   // BUTTON-DETECT
   buttonState = digitalRead(BUTTON_PIN);
 
@@ -180,13 +203,7 @@ void loop()
       else
       {
         // No stock left, beep twice
-        digitalWrite(LED_NO_STOCK, HIGH);
-        sound_buzzer(200);
-        delay(100);
-        sound_buzzer(200);
-        delay(100);
-        sound_buzzer(200);
-        digitalWrite(LED_NO_STOCK, LOW);
+        flash_led(LED_NO_STOCK, 50, 3, true);
         Serial.println("No stock available");
       }
     }
@@ -200,16 +217,24 @@ void loop()
   send_trigger();
   duration = get_pulse();
 
-  distance = duration * sound_speed / 2;
+  distance = duration * SOUND_SPEED / 2;
 
   if (distance < 5)
   {
-    isObjectDetected = true;
-    stock--;
-    Serial.printf("distance = %f\n", distance);
+    if (stock > 0)
+    {
+      isObjectDetected = true;
+      stock--;
+      Serial.printf("distance = %f\n", distance);
+    }
+    else
+    {
+      // No stock left, beep twice
+      flash_led(LED_NO_STOCK, 50, 3, true);
+      Serial.println("No stock available");
+      delay(5000);
+    }
   }
-
-  publishMessage();
 
   client.loop();
 }
