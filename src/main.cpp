@@ -1,14 +1,18 @@
 #include <Arduino.h>
-#include "secrets.h"
+#include <secrets.h>
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
-#include "WiFi.h"
+#include <WiFi.h>
 #include <ESP32Servo.h>
+#include <MD_Parola.h>
+#include <MD_MAX72xx.h>
+#include <string>
 
 WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
 Servo servo;
+MD_Parola ledMatrix = MD_Parola(MATRIX_HARDWARE_TYPE, MATRIX_CS_PIN, MATRIX_MAX_DEVICES);
 
 bool buttonState = false;     // Current button state
 bool lastButtonState = false; // Previous button state
@@ -47,15 +51,76 @@ void go_servo(int pos)
   delay(3000);
 }
 
-void message_handler(char *topic, byte *payload, unsigned int length)
+void display_matrix_stock()
+{ 
+  // TODO
+  char* stockChar = "STOCK = 99";
+  ledMatrix.displayScroll(stockChar, PA_CENTER, PA_SCROLL_LEFT, 100);
+}
+
+void update_stock(int newStock)
+{
+  stock = newStock;
+  Serial.print("Updated stock: ");
+  Serial.println(stock);
+}
+
+void suscribe_message_handler(char *topic, byte *payload, unsigned int length)
 {
   Serial.print("incoming: ");
   Serial.println(topic);
 
-  StaticJsonDocument<200> doc;
-  deserializeJson(doc, payload);
-  const char *message = doc["message"];
-  Serial.println(message);
+  // Assuming the payload is a string, create a buffer to hold it
+  char payloadBuffer[length + 1];
+  memcpy(payloadBuffer, payload, length);
+  payloadBuffer[length] = '\0';
+
+  // Convert the payload to an integer
+  int receivedStock = atoi(payloadBuffer);
+
+  if (strcmp(topic, STOCK_SUBSCRIBE_TOPIC) == 0)
+  {
+    update_stock(receivedStock);
+    display_matrix_stock(); // Display the updated stock on the LED matrix
+  }
+}
+
+void dispense()
+{
+  //    Positioning table
+  static const int grads[] = {0, 120, -1};
+
+  int i, c, last, t;
+
+  for (i = 0; (c = grads[i]) >= 0; ++i)
+    go_servo(c);
+  for (i -= 2; (c = grads[i]) > 0; --i)
+    go_servo(c);
+}
+
+void publish_message_handler()
+{
+  if (isButtonPressed)
+  {
+    StaticJsonDocument<200> doc;
+    doc["button-pressed"] = true;
+    doc["machine_id"] = MACHINE_ID;
+    char jsonBuffer[512];
+    serializeJson(doc, jsonBuffer); // print to client
+
+    client.publish(PUBLISH_DISPENSE_TOPIC, jsonBuffer);
+    Serial.println("Button pressed");
+
+    // Sound the buzzer and flash the LED
+    flash_led(LED_PIN, 100, 1, true);
+
+    dispense();
+    stock--;
+    display_matrix_stock(); // Display the updated stock on the LED matrix
+    Serial.println("Machine dispensed succesfully");
+
+    isButtonPressed = false; // Reset the isButtonPressed state after publishing
+  }
 }
 
 void connect_IOT()
@@ -78,7 +143,7 @@ void connect_IOT()
   client.setServer(IOT_ENDPOINT, 8883);
 
   // Create a message handler
-  client.setCallback(message_handler);
+  client.setCallback(suscribe_message_handler);
 
   Serial.println("\nConnecting to MQTT Server");
 
@@ -95,51 +160,17 @@ void connect_IOT()
   }
 
   // Subscribe to a topic
-  client.subscribe(IOT_SUBSCRIBE_TOPIC);
+  client.subscribe(STOCK_SUBSCRIBE_TOPIC);
 
+  digitalWrite(LED_BUILTIN, HIGH);
   Serial.println("IoT Connected!");
-}
-
-void dispense()
-{
-  //    Positioning table
-  static const int grads[] = {0, 120, -1};
-
-  int i, c, last, t;
-
-  for (i = 0; (c = grads[i]) >= 0; ++i)
-    go_servo(c);
-  for (i -= 2; (c = grads[i]) > 0; --i)
-    go_servo(c);
-}
-
-void publish_message()
-{
-  if (isButtonPressed)
-  {
-    StaticJsonDocument<200> doc;
-    doc["button-pressed"] = true;
-    doc["machine_id"] = MACHINE_ID;
-    char jsonBuffer[512];
-    serializeJson(doc, jsonBuffer); // print to client
-
-    client.publish(PUBLISH_DISPENSE_TOPIC, jsonBuffer);
-    Serial.println("published-button-pressed");
-
-    // Sound the buzzer and flash the LED
-    flash_led(LED_PIN, 100, 1, true);
-
-    dispense();
-    Serial.println("dispensed");
-
-    isButtonPressed = false; // Reset the isButtonPressed state after publishing
-  }
 }
 
 void setup()
 {
   Serial.begin(BAUD);
   connect_IOT();
+  pinMode(LED_BUILTIN, OUTPUT);      // Set the onboard LED as output
   pinMode(BUTTON_PIN, INPUT_PULLUP); // Set the button pin as input with a pull-up resistor
   pinMode(BUZZER_PIN, OUTPUT);       // Set the buzzer pin as an output
   pinMode(BUZZER_PIN, OUTPUT);       // Set the buzzer pin as an output
@@ -148,12 +179,19 @@ void setup()
 
   servo.attach(SERVO_PIN);
   servo.write(0);
+
+  ledMatrix.begin();          // initialize the object
+  ledMatrix.setIntensity(15); // set the brightness of the LED matrix display (from 0 to 15)
+  ledMatrix.displayClear();   // clear led matrix display
+
   delay(2000);
 }
 
 void loop()
 {
-  publish_message();
+  ledMatrix.displayAnimate();
+
+  publish_message_handler();
 
   // BUTTON-DETECT
   buttonState = digitalRead(BUTTON_PIN);
@@ -171,7 +209,7 @@ void loop()
       {
         // No stock left, beep twice
         flash_led(LED_NO_STOCK, 50, 3, true);
-        Serial.println("No stock available");
+        Serial.println("\nNo stock available");
       }
     }
     lastButtonState = buttonState;
