@@ -52,10 +52,10 @@ void go_servo(int pos)
 }
 
 void display_matrix_stock()
-{ 
-  // TODO
-  char* stockChar = "STOCK = 99";
-  ledMatrix.displayScroll(stockChar, PA_CENTER, PA_SCROLL_LEFT, 100);
+{
+  char text[100];
+  sprintf(text, "%d", stock);
+  ledMatrix.displayScroll(text, PA_CENTER, PA_SCROLL_LEFT, 100);
 }
 
 void update_stock(int newStock)
