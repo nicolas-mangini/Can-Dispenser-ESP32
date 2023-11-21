@@ -78,17 +78,24 @@ void suscribe_message_handler(char *topic, byte *payload, unsigned int length)
   // Convert the payload to an integer
   int receivedStock = atoi(payloadBuffer);
 
-  if (strcmp(topic, STOCK_SUBSCRIBE_TOPIC) == 0)
+  if (strcmp(topic, STOCK_TOPIC) == 0)
   {
     update_stock(receivedStock);
     display_matrix_stock(); // Display the updated stock on the LED matrix
+  }
+  else if (strcmp(topic, DISPENSE_TOPIC_UI) == 0)
+  {
+    if (stock > 0)
+    {
+      isButtonPressed = true;
+    }
   }
 }
 
 void dispense()
 {
   //    Positioning table
-  static const int grads[] = {0, 120, -1};
+  static const int grads[] = {90, 0, -1};
 
   int i, c, last, t;
 
@@ -108,7 +115,7 @@ void publish_message_handler()
     char jsonBuffer[512];
     serializeJson(doc, jsonBuffer); // print to client
 
-    client.publish(PUBLISH_DISPENSE_TOPIC, jsonBuffer);
+    client.publish(DISPENSE_TOPIC, jsonBuffer);
     Serial.println("Button pressed");
 
     // Sound the buzzer and flash the LED
@@ -160,7 +167,8 @@ void connect_IOT()
   }
 
   // Subscribe to a topic
-  client.subscribe(STOCK_SUBSCRIBE_TOPIC);
+  client.subscribe(STOCK_TOPIC);
+  client.subscribe(DISPENSE_TOPIC_UI);
 
   digitalWrite(LED_BUILTIN, HIGH);
   Serial.println("IoT Connected!");
