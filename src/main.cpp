@@ -65,6 +65,19 @@ void update_stock(int newStock)
   Serial.println(stock);
 }
 
+void dispense()
+{
+  //    Positioning table
+  static const int grads[] = {90, 0, -1};
+
+  int i, c, last, t;
+
+  for (i = 0; (c = grads[i]) >= 0; ++i)
+    go_servo(c);
+  for (i -= 2; (c = grads[i]) > 0; --i)
+    go_servo(c);
+}
+
 void suscribe_message_handler(char *topic, byte *payload, unsigned int length)
 {
   Serial.print("incoming: ");
@@ -83,26 +96,23 @@ void suscribe_message_handler(char *topic, byte *payload, unsigned int length)
     update_stock(receivedStock);
     display_matrix_stock(); // Display the updated stock on the LED matrix
   }
-  else if (strcmp(topic, DISPENSE_TOPIC_UI) == 0)
+
+  if (strcmp(topic, DISPENSE_TOPIC_UI) == 0)
   {
     if (stock > 0)
     {
-      isButtonPressed = true;
+      Serial.println("DIspense from UI received");
+      dispense();
+      stock--;
+      flash_led(LED_PIN, 100, 1, true);
+    }
+    else
+    {
+      // No stock left, beep twice
+      flash_led(LED_NO_STOCK, 50, 3, true);
+      Serial.println("\nNo stock available");
     }
   }
-}
-
-void dispense()
-{
-  //    Positioning table
-  static const int grads[] = {90, 0, -1};
-
-  int i, c, last, t;
-
-  for (i = 0; (c = grads[i]) >= 0; ++i)
-    go_servo(c);
-  for (i -= 2; (c = grads[i]) > 0; --i)
-    go_servo(c);
 }
 
 void publish_message_handler()
