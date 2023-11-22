@@ -55,7 +55,7 @@ void display_matrix_stock()
 {
   char text[100];
   sprintf(text, "%d", stock);
-  ledMatrix.displayScroll(text, PA_CENTER, PA_SCROLL_LEFT, 100);
+  ledMatrix.displayScroll(text, PA_CENTER, PA_SCROLL_LEFT, 200);
 }
 
 void update_stock(int newStock)
@@ -107,9 +107,9 @@ void suscribe_message_handler(char *topic, byte *payload, unsigned int length)
     if (stock > 0)
     {
       Serial.println("Dispense from UI received");
+      flash_led(LED_STOCK, 100, 1, true);
       dispense();
       stock--;
-      flash_led(LED_PIN, 100, 1, true);
     }
     else
     {
@@ -134,7 +134,7 @@ void publish_message_handler()
     Serial.println("Button pressed");
 
     // Sound the buzzer and flash the LED
-    flash_led(LED_PIN, 100, 1, true);
+    flash_led(LED_STOCK, 100, 1, true);
 
     dispense();
     stock--;
@@ -169,7 +169,7 @@ void connect_IOT()
 
   Serial.println("\nConnecting to MQTT Server");
 
-  while (!client.connect(THINGNAME))
+  while (!client.connect(MACHINE_ID))
   {
     Serial.print(".");
     delay(100);
@@ -194,14 +194,13 @@ void setup()
   Serial.begin(BAUD);
   connect_IOT();
   pinMode(LED_BUILTIN, OUTPUT);      // Set the onboard LED as output
+  pinMode(LED_STOCK, OUTPUT);        // Set the stock LED as output
+  pinMode(LED_NO_STOCK, OUTPUT);     // Set the no stock LED as output ()
   pinMode(BUTTON_PIN, INPUT_PULLUP); // Set the button pin as input with a pull-up resistor
   pinMode(BUZZER_PIN, OUTPUT);       // Set the buzzer pin as an output
-  pinMode(BUZZER_PIN, OUTPUT);       // Set the buzzer pin as an output
-  pinMode(LED_PIN, OUTPUT);          // Set the LED pin as an output
-  pinMode(LED_NO_STOCK, OUTPUT);
 
   servo.attach(SERVO_PIN);
-  servo.write(0);
+  servo.write(90);
 
   ledMatrix.begin();          // initialize the object
   ledMatrix.setIntensity(15); // set the brightness of the LED matrix display (from 0 to 15)
