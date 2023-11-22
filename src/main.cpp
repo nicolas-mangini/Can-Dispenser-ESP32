@@ -83,13 +83,18 @@ void suscribe_message_handler(char *topic, byte *payload, unsigned int length)
   Serial.print("incoming: ");
   Serial.println(topic);
 
-  // Assuming the payload is a string, create a buffer to hold it
+  // Assuming the payload is a JSON string, create a buffer to hold it
   char payloadBuffer[length + 1];
   memcpy(payloadBuffer, payload, length);
   payloadBuffer[length] = '\0';
 
-  // Convert the payload to an integer
-  int receivedStock = atoi(payloadBuffer);
+  // Parse the JSON object using a JSON parser library
+  DynamicJsonDocument doc(1024);
+  deserializeJson(doc, payloadBuffer);
+
+  // Extract the stock value and machine ID from the JSON object
+  int receivedStock = doc["stock-updated"];
+  String machineId = doc["machine_id"];
 
   if (strcmp(topic, STOCK_TOPIC) == 0)
   {
@@ -101,7 +106,7 @@ void suscribe_message_handler(char *topic, byte *payload, unsigned int length)
   {
     if (stock > 0)
     {
-      Serial.println("DIspense from UI received");
+      Serial.println("Dispense from UI received");
       dispense();
       stock--;
       flash_led(LED_PIN, 100, 1, true);
