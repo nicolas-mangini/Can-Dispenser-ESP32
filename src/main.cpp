@@ -169,7 +169,7 @@ void connect_IOT()
 
   Serial.println("\nConnecting to MQTT Server");
 
-  while (!client.connect("Pepe"))
+  while (!client.connect(THINGNAME))
   {
     Serial.print(".");
     delay(100);
