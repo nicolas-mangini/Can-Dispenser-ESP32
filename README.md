@@ -74,11 +74,11 @@ Consiste en un diagrama donde se representan todas las partes principales que co
 Estos componentes, en conjunto, proporcionan una interfaz completa y eficaz entre el usuario y la máquina expendedora, ofreciendo funcionalidades clave como la solicitud de productos, la visualización del stock y la retroalimentación auditiva, intuitiva y visual para mejorar la experiencia global del usuario. 
 
 ## DEMO
-https://github.com/nicolas-mangini/can-dispenser-esp32/assets/72108522/65f2384f-3db7-4e01-8400-86fc07262aab
+https://github.com/nicolas-mangini/can-dispenser-esp32/assets/72108522/7613198d-2dad-4eb9-a2d3-b34b3739ddbb
 
-https://github.com/nicolas-mangini/can-dispenser-esp32/assets/72108522/f03c865d-999f-4ff0-a341-884c36315e1b
+https://github.com/nicolas-mangini/can-dispenser-esp32/assets/72108522/da9cac3b-66ad-488b-a3ad-6f9ebf2c0450
 
-https://github.com/nicolas-mangini/can-dispenser-esp32/assets/72108522/0f631373-b21d-47d2-b9cc-4a9f25463ef6
+https://github.com/nicolas-mangini/can-dispenser-esp32/assets/72108522/b809f0b6-1e81-4d86-8e73-073f61684296
 
 ## Conclusión
 El presente proyecto de Internet de las cosas (IoT) busca proporcionar a los participantes una inmersión práctica en la concepción, desarrollo e implementación de un sistema avanzado de máquina expendedora. Mediante la integración de tecnologías de comunicación en la nube, así como el almacenamiento y análisis de datos, se busca dotar a los participantes de conocimientos significativos en relación con las aplicaciones y desafíos que caracterizan el ámbito del IoT en situaciones del mundo real. La implementación del panel de control destinado a los usuarios, por su parte, facilitará una gestión y monitoreo fluidos e intuitivos, enriqueciendo la experiencia global del usuario. 
