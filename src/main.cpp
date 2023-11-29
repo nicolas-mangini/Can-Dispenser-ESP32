@@ -17,7 +17,7 @@ MD_Parola ledMatrix = MD_Parola(MATRIX_HARDWARE_TYPE, MATRIX_CS_PIN, MATRIX_MAX_
 bool buttonState = false;     // Current button state
 bool lastButtonState = false; // Previous button state
 bool isButtonPressed = false; // Flag to indicate a button press
-int stock = 20;
+int stock = 3;
 
 void sound_buzzer(int delayTime)
 {
