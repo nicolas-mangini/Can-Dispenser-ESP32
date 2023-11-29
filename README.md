@@ -75,7 +75,9 @@ Estos componentes, en conjunto, proporcionan una interfaz completa y eficaz entr
 
 ## DEMO
 https://github.com/nicolas-mangini/can-dispenser-esp32/assets/72108522/65f2384f-3db7-4e01-8400-86fc07262aab
+
 https://github.com/nicolas-mangini/can-dispenser-esp32/assets/72108522/f03c865d-999f-4ff0-a341-884c36315e1b
+
 https://github.com/nicolas-mangini/can-dispenser-esp32/assets/72108522/0f631373-b21d-47d2-b9cc-4a9f25463ef6
 
 ## Conclusión
