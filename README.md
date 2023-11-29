@@ -62,7 +62,6 @@ Consiste en un diagrama donde se representan todas las partes principales que co
 - <ins>ESP32:</ins> El ESP32 es un microcontrolador versátil y potente que desempeña un papel crucial en el proyecto del dispensador de latas. Funciona como el cerebro del sistema, el código del script, los actuadores y la comunicación con la nube. Con capacidades inalámbricas, el ESP32 también nos permite la conectividad Wi-Fi, facilitando la comunicación remota y la integración con servicios en la nube. 
 
 - <ins>Push Button:</ins> El botón pulsador (Push Button) cumple una función esencial en la interacción usuario-máquina. Permite a los usuarios realizar acciones específicas, como solicitar una lata. Su simplicidad y facilidad de uso hacen que sea una interfaz realmente intuitiva para los usuarios. 
-5
 
 - <ins>2 LEDs:</ins> Los LEDs (Light Emitting Diodes) tienen una doble función en el proyecto. Actuar como indicadores visuales para los usuarios, mostrando información sobre el estado de la máquina (por ejemplo, disponibilidad de productos). Además, pueden utilizarse como herramientas de diagnóstico para señalar posibles problemas de cableado o estados específicos del sistema. 
 
@@ -73,6 +72,11 @@ Consiste en un diagrama donde se representan todas las partes principales que co
 - <ins>Servo:</ins> El servo es un actuador esencial para el mecanismo de dispensación de latas. Se utiliza para controlar el mecanismo que permite la salida controlada de las latas. Su capacidad para realizar movimientos precisos y controlados garantiza una dispensación eficiente y precisa de los productos. 
 
 Estos componentes, en conjunto, proporcionan una interfaz completa y eficaz entre el usuario y la máquina expendedora, ofreciendo funcionalidades clave como la solicitud de productos, la visualización del stock y la retroalimentación auditiva, intuitiva y visual para mejorar la experiencia global del usuario. 
+
+## DEMO
+https://github.com/nicolas-mangini/can-dispenser-esp32/assets/72108522/65f2384f-3db7-4e01-8400-86fc07262aab
+https://github.com/nicolas-mangini/can-dispenser-esp32/assets/72108522/f03c865d-999f-4ff0-a341-884c36315e1b
+https://github.com/nicolas-mangini/can-dispenser-esp32/assets/72108522/0f631373-b21d-47d2-b9cc-4a9f25463ef6
 
 ## Conclusión
 El presente proyecto de Internet de las cosas (IoT) busca proporcionar a los participantes una inmersión práctica en la concepción, desarrollo e implementación de un sistema avanzado de máquina expendedora. Mediante la integración de tecnologías de comunicación en la nube, así como el almacenamiento y análisis de datos, se busca dotar a los participantes de conocimientos significativos en relación con las aplicaciones y desafíos que caracterizan el ámbito del IoT en situaciones del mundo real. La implementación del panel de control destinado a los usuarios, por su parte, facilitará una gestión y monitoreo fluidos e intuitivos, enriqueciendo la experiencia global del usuario. 
