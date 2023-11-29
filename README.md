@@ -1,4 +1,6 @@
 # Dispensador de Latas
+![BANNER](https://github.com/nicolas-mangini/can-dispenser-esp32/assets/72108522/1cd40197-d99e-4ca4-8d18-c77e998b9a33)
+
 ## Definición y especificación de requerimientos
 Los requisitos de nuestro proyecto describen los servicios y elementos que el mismo ofrece y las restricciones asociadas a su funcionamiento, es decir, las propiedades o restricciones que se deben satisfacer han sido determinadas de forma precisa. Entre estos requisitos enumeramos por secciones a cada uno
 
